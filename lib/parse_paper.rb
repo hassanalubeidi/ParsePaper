@@ -1,4 +1,4 @@
-require "parse_paper/version"
+# require "parse_paper/version"
 require_relative "parse_paper/PDF.rb"
 require_relative "parse_paper/question.rb"
 require_relative "parse_paper/serializer.rb"

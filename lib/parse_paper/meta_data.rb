@@ -42,7 +42,7 @@ module ParsePaper
 			current_first_level_index = -1
 			current_second_level_index = -1
 			current_third_level_index = -1
-			second_level = ["(a)", "(b)", "(c)", "(d)", "(e)", "(f)"] #adding (g) catches (g) state in chemistry questions 
+			second_level = ["(a)", "(b)", "(c)", "(d)", "(e)", "(f)", "(g)", "(h)"] #adding (g) catches (g) state in chemistry questions 
 			third_level = ["(i)", "(ii)", "(iii)", "(iv)", "(v)", "(vi)", "(vii)"]
 			position_tree = []
 
@@ -85,7 +85,7 @@ module ParsePaper
 		end
 
 		def self.get_positions(testpaper) 
-			testpaper.scan(/\([a-f]\)|\(i\)|\(ii\)|\(iii\)|\(iv\)|\(v\)/).reject(&:empty?)
+			return clean_up_positions(testpaper.scan(/\([a-h]\)|\(i\)|\(ii\)|\(iii\)|\(iv\)|\(v\)|\[\d*\]/).reject(&:empty?))
 		end
 		def self.get_marks(text)
 			return text.scan(/\[\d*\]/).map! {|t| t.scan(/\d*/).join.to_i}
@@ -110,15 +110,52 @@ module ParsePaper
 			end
 			return mainquestions
 		end
+
+		def self.clean_up_positions(positions) # O(n^2); can probably become O(n)
+			prev_pos = ""
+			positions.each_with_index do |position, index|
+				if second_level?(prev_pos) then
+					if second_level?(position) then #Second level positions MUST be followed by either lower level position or a mark
+						puts "caught #{position} | prev #{prev_pos}"
+						positions[index] = nil
+					end
+				elsif third_level?(prev_pos) then
+					unless mark?(position) then #Third level positions must be followed by a mark (as they are deepest nested)
+						puts "caught #{position} | prev #{prev_pos}"
+						positions[index] = nil
+					end
+				elsif mark?(prev_pos) #Marks must be followed by a question position, not another mark
+					if mark?(position)
+						puts "caught #{position} | prev #{prev_pos}"
+						positions[index] = nil
+					end
+				elsif prev_pos == position then #Removes duplicates, just incase
+					puts "caught #{position} | prev #{prev_pos}"
+					positions[index] = nil
+				end
+
+				prev_pos = position
+
+				if mark?(position) then #Remove marks from the array
+					puts "caught #{position} | prev #{prev_pos}"
+					positions[index] = nil
+				end
+			end
+			puts positions.reject(&:nil?)
+			return positions.reject(&:nil?)
+		end
 		
 		def self.first_level?(pos)
 			pos == "(a)"
 		end
 		def self.second_level?(pos)
-			pos.scan(/\([a-f]\)/).count > 0
+			pos.scan(/\([a-h]\)/).count > 0
 		end
 		def self.third_level?(pos)
 			pos.scan(/\(i\)|\(ii\)|\(iii\)|\(iv\)|\(v\)/).count > 0
+		end
+		def self.mark?(pos)
+			pos.scan(/\[\d*\]/).count > 0
 		end
 	end
 

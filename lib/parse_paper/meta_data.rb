@@ -132,6 +132,11 @@ module ParsePaper
 				elsif prev_pos == position then #Removes duplicates, just incase
 					puts "caught #{position} | prev #{prev_pos}"
 					positions[index] = nil
+				elsif prev_pos == "" then
+					if position != "(a)" then
+						positions[index] = nil
+						position = ""
+					end
 				end
 
 				prev_pos = position
